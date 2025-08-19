@@ -1,0 +1,14 @@
+#!/usr/bin/env zsh
+
+on_project_hook() {
+    local project_root="$1"
+    shift
+    local markers=("$@")
+
+    # Export with different variable name to avoid conflicts
+    export HOOKIE_CURRENT_PROJECT="${project_root:t}"
+    export HOOKIE_PROJECT_ROOT="$project_root"
+    export HOOKIE_PROJECT_MARKERS_STRING="${(j:, :)markers}"  # Different name
+
+    echo "🚀 Entered project: ${project_root:t} (${(j:, :)markers})"
+}

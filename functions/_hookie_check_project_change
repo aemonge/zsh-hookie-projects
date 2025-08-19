@@ -1,0 +1,36 @@
+#!/usr/bin/env zsh
+
+# Main project detection function - called on directory change
+_hookie_check_project_change() {
+    # Early exit if current directory is not allowed
+    if ! _hookie_is_path_allowed "$PWD"; then
+        # If we were in a project, trigger off_project hook
+        if [[ -n "$HOOKIE_CURRENT_PROJECT_DIR" ]]; then
+            off_project_hook "$HOOKIE_CURRENT_PROJECT_DIR" "${HOOKIE_CURRENT_PROJECT_MARKERS[@]}"
+            HOOKIE_CURRENT_PROJECT_DIR=""
+            HOOKIE_CURRENT_PROJECT_MARKERS=()
+        fi
+        return
+    fi
+
+    local new_project_root=$(_hookie_find_project_root)
+
+    # Only trigger hooks if project context actually changed
+    if [[ "$new_project_root" != "$HOOKIE_CURRENT_PROJECT_DIR" ]]; then
+
+        # Leaving a project
+        if [[ -n "$HOOKIE_CURRENT_PROJECT_DIR" ]]; then
+            off_project_hook "$HOOKIE_CURRENT_PROJECT_DIR" "${HOOKIE_CURRENT_PROJECT_MARKERS[@]}"
+        fi
+
+        # Entering a project
+        if [[ -n "$new_project_root" ]]; then
+            HOOKIE_CURRENT_PROJECT_DIR="$new_project_root"
+            HOOKIE_CURRENT_PROJECT_MARKERS=($(_hookie_detect_markers "$new_project_root"))
+            on_project_hook "$new_project_root" "${HOOKIE_CURRENT_PROJECT_MARKERS[@]}"
+        else
+            HOOKIE_CURRENT_PROJECT_DIR=""
+            HOOKIE_CURRENT_PROJECT_MARKERS=()
+        fi
+    fi
+}

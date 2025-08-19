@@ -1,0 +1,38 @@
+#!/usr/bin/env zsh
+
+# Check if a path is allowed based on whitelist/blacklist configuration
+_hookie_is_path_allowed() {
+    local target_path="$1"
+    local resolved_path="${target_path:A}"  # Resolve absolute path
+
+    # If whitelist is configured, only allow whitelisted paths
+    if (( ${#HOOKIE_WHITELIST_PATHS[@]} > 0 )); then
+        local allowed=0
+        local whitelist_path
+
+        for whitelist_path in $HOOKIE_WHITELIST_PATHS; do
+            local resolved_whitelist="${whitelist_path:A}"
+
+            # Check if target path is under whitelisted directory (prefix match for whitelist)
+            if [[ "$resolved_path" == "$resolved_whitelist"* ]]; then
+                allowed=1
+                break
+            fi
+        done
+
+        (( allowed == 0 )) && return 1
+    fi
+
+    # Check blacklist - ONLY EXACT MATCHES
+    local blacklist_path
+    for blacklist_path in $HOOKIE_BLACKLIST_PATHS; do
+        local resolved_blacklist="${blacklist_path:A}"
+
+        # Only exact match (no subdirectory blocking)
+        if [[ "$resolved_path" == "$resolved_blacklist" ]]; then
+            return 1
+        fi
+    done
+
+    return 0
+}

@@ -1,0 +1,28 @@
+#!/usr/bin/env zsh
+
+# Find project root by walking up directory tree
+_hookie_find_project_root() {
+    local dir="$PWD"
+
+    # Check if current directory is allowed
+    _hookie_is_path_allowed "$dir" || return 1
+
+    while [[ "$dir" != "/" ]]; do
+        # Check if this directory level is allowed
+        if ! _hookie_is_path_allowed "$dir"; then
+            return 1
+        fi
+
+        # Check for project markers
+        for marker in $HOOKIE_PROJECT_MARKERS; do
+            if [[ -e "$dir/$marker" ]]; then
+                echo "$dir"
+                return 0
+            fi
+        done
+
+        dir="${dir:h}"  # Parent directory
+    done
+
+    return 1
+}

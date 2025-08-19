@@ -1,0 +1,15 @@
+#!/usr/bin/env zsh
+
+# Detect which project markers are present in given directory
+_hookie_detect_markers() {
+    local project_root="$1"
+    local found_markers=()
+
+    [[ -z "$project_root" ]] && return 1
+
+    for marker in $HOOKIE_PROJECT_MARKERS; do
+        [[ -e "$project_root/$marker" ]] && found_markers+=("$marker")
+    done
+
+    echo "${found_markers[@]}"
+}
