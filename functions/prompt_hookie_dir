@@ -1,0 +1,119 @@
+#!/usr/bin/env zsh
+
+# Custom project-aware directory segment for PowerLevel10k
+prompt_hookie_dir() {
+    if [[ -n "$HOOKIE_CURRENT_PROJECT" && -n "$HOOKIE_PROJECT_ROOT" ]]; then
+        _hookie_dir_project_mode
+    else
+        _hookie_dir_standard_mode
+    fi
+}
+
+# Project mode: show shortened parent + project + relative path
+_hookie_dir_project_mode() {
+    local project_root="$HOOKIE_PROJECT_ROOT"
+    local project_name="$HOOKIE_CURRENT_PROJECT"
+    local current_dir="$PWD"
+
+    # Get and shorten parent path properly
+    local parent_path="${project_root:h}"
+    local shortened_parent=$(_hookie_shorten_parent_path "$parent_path")
+
+    # Calculate relative path within project
+    local relative_path=""
+    if [[ "$current_dir" != "$project_root" ]]; then
+        relative_path="/${current_dir#$project_root/}"
+    fi
+
+    # Colors (using standard terminal colors)
+    local project_color=${HOOKIE_DIR_PROJECT_COLOR:-4}      # Blue for project
+    local subdir_color=${HOOKIE_DIR_SUBDIR_COLOR:-6}        # Cyan for subdirs
+
+    # Build colored display text - simple and clean
+    local project_part="$shortened_parent/$project_name"
+    local display_text="%F{$project_color}$project_part%f"
+
+    if [[ -n "$relative_path" ]]; then
+        # Just add the relative path in different color - no special separator
+        display_text+="%F{$subdir_color}$relative_path%f"
+    fi
+
+    # Single p10k segment with colored text
+    p10k segment -t "$display_text"
+}
+
+# Standard mode: enhanced default directory display
+_hookie_dir_standard_mode() {
+    local current_dir="$PWD"
+    local display_path=$(_hookie_shorten_path "$current_dir")
+    local dir_color=${HOOKIE_DIR_DEFAULT_COLOR:-4}
+
+    p10k segment -f $dir_color -t "$display_path"
+}
+
+# Shorten parent path specifically (more aggressive)
+_hookie_shorten_parent_path() {
+    local path="$1"
+
+    # Replace HOME with ~
+    path="${path/#$HOME/~}"
+
+    # Return ~ as-is
+    [[ "$path" == "~" ]] && echo "$path" && return
+
+    # Split path into components
+    local -a components
+    components=("${(s:/:)path}")
+
+    # Always shorten parent paths aggressively
+    local -a result=()
+
+    for ((i=1; i<=${#components[@]}; i++)); do
+        if [[ "${components[i]}" == "~" ]]; then
+            result+=("~")
+        elif (( i == ${#components[@]} )); then
+            # Keep last component full if it's short, otherwise shorten
+            if [[ ${#components[i]} -le 3 ]]; then
+                result+=("${components[i]}")
+            else
+                result+=("${components[i]:0:1}")
+            fi
+        else
+            # Shorten all middle components to first letter
+            result+=("${components[i]:0:1}")
+        fi
+    done
+
+    echo "${(j:/:)result}"
+}
+
+# General path shortening (for non-project paths)
+_hookie_shorten_path() {
+    local path="$1"
+
+    # Replace HOME with ~
+    path="${path/#$HOME/~}"
+
+    # Don't shorten if it's just ~
+    [[ "$path" == "~" ]] && echo "$path" && return
+
+    # For long paths, apply shortening
+    local -a components
+    components=("${(s:/:)path}")
+
+    if (( ${#components[@]} > 3 )); then
+        local -a result=("${components[1]}")  # Keep first (~)
+
+        # Shorten middle components
+        for ((i=2; i<${#components[@]}; i++)); do
+            result+=("${components[i]:0:1}")
+        done
+
+        # Keep last component full
+        result+=("${components[-1]}")
+
+        echo "${(j:/:)result}"
+    else
+        echo "$path"
+    fi
+}

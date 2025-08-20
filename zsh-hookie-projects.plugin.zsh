@@ -8,6 +8,19 @@
 typeset -g HOOKIE_CURRENT_PROJECT_DIR=""
 typeset -ga HOOKIE_CURRENT_PROJECT_MARKERS=()
 
+# Hookie-dir segment configuration (customizable in ~/.zshrc)
+typeset -g HOOKIE_DIR_PARENT_COLOR=${HOOKIE_DIR_PARENT_COLOR:-240}     # Dark gray
+typeset -g HOOKIE_DIR_PROJECT_COLOR=${HOOKIE_DIR_PROJECT_COLOR:-6}      # Cyan
+typeset -g HOOKIE_DIR_SUBDIR_COLOR=${HOOKIE_DIR_SUBDIR_COLOR:-4}        # Blue
+typeset -g HOOKIE_DIR_SEPARATOR_COLOR=${HOOKIE_DIR_SEPARATOR_COLOR:-240} # Dark gray
+typeset -g HOOKIE_DIR_DEFAULT_COLOR=${HOOKIE_DIR_DEFAULT_COLOR:-4}       # Blue
+typeset -g HOOKIE_DIR_SHORTEN_THRESHOLD=${HOOKIE_DIR_SHORTEN_THRESHOLD:-3} # When to start shortening
+
+# Message control flags (set to 0 to disable, 1 to enable)
+typeset -g HOOKIE_SHOW_ENTERING=${HOOKIE_SHOW_ENTERING:-1}        # Show "🚀 Entered project"
+typeset -g HOOKIE_SHOW_LEAVING=${HOOKIE_SHOW_LEAVING:-1}          # Show "👋 Left project"
+typeset -g HOOKIE_SHOW_CD_PROJECT_ROOT=${HOOKIE_SHOW_CD_PROJECT_ROOT:-1}  # Show "📁 Going to project root"
+
 # Default project markers (customizable)
 typeset -ga HOOKIE_PROJECT_MARKERS=(
     # Version Control
@@ -241,8 +254,6 @@ typeset -ga HOOKIE_BLACKLIST_PATHS=(
 typeset -ga HOOKIE_WHITELIST_PATHS=(
     # Examples (uncomment to enable whitelist mode):
     # "$HOME/projects"
-    # "$HOME/work"
-    # "$HOME/dev"
     # "/workspace"
 )
 
@@ -257,6 +268,8 @@ autoload -Uz _hookie_check_project_change
 autoload -Uz _hookie_is_path_allowed
 autoload -Uz on_project_hook
 autoload -Uz off_project_hook
+autoload -Uz prompt_hookie_dir
+autoload -Uz cd
 
 # Hook into directory changes
 chpwd_functions+=(_hookie_check_project_change)

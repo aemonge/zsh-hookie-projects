@@ -15,6 +15,8 @@ off_project_hook() {
     HOOKIE_CURRENT_PROJECT_DIR=""
     HOOKIE_CURRENT_PROJECT_MARKERS=()
 
-    # Default behavior: simple notification
-    echo "👋 Left project: ${project_root:t}"
+    # Show message only if enabled
+    if [[ "$HOOKIE_SHOW_LEAVING" != "0" ]]; then
+        echo "👋 Left project: ${project_root:t}"
+    fi
 }

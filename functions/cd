@@ -1,0 +1,27 @@
+#!/usr/bin/env zsh
+
+# Smart cd command that goes to project root when called without arguments
+cd() {
+    # Check if smart cd is disabled
+    if [[ -n "$HOOKIE_DISABLE_SMART_CD" ]]; then
+        builtin cd "$@"
+        return
+    fi
+
+    # If no arguments provided
+    if [[ $# -eq 0 ]]; then
+        if [[ -n "$HOOKIE_PROJECT_ROOT" ]]; then
+            # Show message only if enabled
+            if [[ "$HOOKIE_SHOW_CD_PROJECT_ROOT" != "0" ]]; then
+                echo "📁 Going to project root: ${HOOKIE_PROJECT_ROOT:t}"
+            fi
+            builtin cd "$HOOKIE_PROJECT_ROOT"
+        else
+            # Default behavior: go to HOME
+            builtin cd "$HOME"
+        fi
+    else
+        # Pass all arguments to builtin cd
+        builtin cd "$@"
+    fi
+}

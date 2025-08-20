@@ -1,14 +1,25 @@
 #!/usr/bin/env zsh
 
+# Default on_project hook - users can override this function
 on_project_hook() {
     local project_root="$1"
     shift
     local markers=("$@")
 
-    # Export with different variable name to avoid conflicts
+    # Convert array to string first, then export
+    local markers_string="${(j:, :)markers}"
+
+    # Export environment variables as strings
     export HOOKIE_CURRENT_PROJECT="${project_root:t}"
     export HOOKIE_PROJECT_ROOT="$project_root"
-    export HOOKIE_PROJECT_MARKERS_STRING="${(j:, :)markers}"  # Different name
+    export HOOKIE_PROJECT_MARKERS_STRING="$markers_string"
 
-    echo "🚀 Entered project: ${project_root:t} (${(j:, :)markers})"
+    # Fix type conflict by explicitly declaring as string
+    typeset -g HOOKIE_PROJECT_MARKERS_STRING="$markers_string"
+    export HOOKIE_PROJECT_MARKERS_STRING
+
+    # Show message only if enabled
+    if [[ "$HOOKIE_SHOW_ENTERING" != "0" ]]; then
+        echo "🚀 Entered project: ${project_root:t} ($markers_string)"
+    fi
 }
