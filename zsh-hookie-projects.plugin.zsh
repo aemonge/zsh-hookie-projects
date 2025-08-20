@@ -271,3 +271,8 @@ chpwd_functions+=(_hookie_check_project_change)
 
 # Initialize on plugin load
 _hookie_check_project_change
+
+# Ensure the hook runs before each prompt
+if (( ! ${precmd_functions[(I)_hookie_check_project_change]} )); then
+    precmd_functions+=(_hookie_check_project_change)
+fi
