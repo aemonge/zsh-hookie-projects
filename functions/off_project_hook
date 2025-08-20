@@ -9,19 +9,12 @@ off_project_hook() {
     # Clear environment variables
     unset HOOKIE_CURRENT_PROJECT
     unset HOOKIE_PROJECT_ROOT
-    unset HOOKIE_PROJECT_MARKERS
+    unset HOOKIE_PROJECT_MARKERS_STRING
+
+    # Clear internal state (backup cleanup)
+    HOOKIE_CURRENT_PROJECT_DIR=""
+    HOOKIE_CURRENT_PROJECT_MARKERS=()
 
     # Default behavior: simple notification
     echo "👋 Left project: ${project_root:t}"
-
-    # Example cleanup (uncomment/modify as needed):
-
-    # Restore original prompt
-    # PS1="${PS1#%F{green}[*]%f }"
-
-    # Deactivate Python virtual environment
-    # [[ -n "$VIRTUAL_ENV" ]] && deactivate 2>/dev/null
-
-    # Reset to default Node.js version
-    # command -v nvm >/dev/null && nvm use default 2>/dev/null
 }

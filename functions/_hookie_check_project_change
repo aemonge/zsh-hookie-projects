@@ -4,7 +4,7 @@
 _hookie_check_project_change() {
     # Early exit if current directory is not allowed
     if ! _hookie_is_path_allowed "$PWD"; then
-        # If we were in a project, trigger off_project hook
+        # If we were in a project, trigger off_project hook and clear state
         if [[ -n "$HOOKIE_CURRENT_PROJECT_DIR" ]]; then
             off_project_hook "$HOOKIE_CURRENT_PROJECT_DIR" "${HOOKIE_CURRENT_PROJECT_MARKERS[@]}"
             HOOKIE_CURRENT_PROJECT_DIR=""
@@ -15,6 +15,10 @@ _hookie_check_project_change() {
 
     local new_project_root=$(_hookie_find_project_root)
 
+    # Debug output (remove after testing)
+    # echo "DEBUG: Current stored: '$HOOKIE_CURRENT_PROJECT_DIR'"
+    # echo "DEBUG: New found: '$new_project_root'"
+
     # Only trigger hooks if project context actually changed
     if [[ "$new_project_root" != "$HOOKIE_CURRENT_PROJECT_DIR" ]]; then
 
@@ -23,12 +27,14 @@ _hookie_check_project_change() {
             off_project_hook "$HOOKIE_CURRENT_PROJECT_DIR" "${HOOKIE_CURRENT_PROJECT_MARKERS[@]}"
         fi
 
-        # Entering a project
+        # Update state first, then trigger hook
         if [[ -n "$new_project_root" ]]; then
+            # Entering a project
             HOOKIE_CURRENT_PROJECT_DIR="$new_project_root"
             HOOKIE_CURRENT_PROJECT_MARKERS=($(_hookie_detect_markers "$new_project_root"))
             on_project_hook "$new_project_root" "${HOOKIE_CURRENT_PROJECT_MARKERS[@]}"
         else
+            # Not in any project
             HOOKIE_CURRENT_PROJECT_DIR=""
             HOOKIE_CURRENT_PROJECT_MARKERS=()
         fi
