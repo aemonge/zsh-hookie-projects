@@ -306,88 +306,60 @@ off_project_hook() {
 Automatically activate Python virtual environments when entering Python projects:
 
 ```bash
-# Advanced Python project hook with auto-activation
-on_project_hook() {
-    local project_root="$1"
-    shift
-    local markers=("$@")
+HOOKIE_PROJECT() {
 
-    # Set standard environment variables
-    export HOOKIE_CURRENT_PROJECT="${project_root:t}"
-    export HOOKIE_PROJECT_ROOT="$project_root"
-    typeset -g HOOKIE_PROJECT_MARKERS_STRING="${(j:, :)markers}"
-    export HOOKIE_PROJECT_MARKERS_STRING
+    # Silent mode - no messages
+    export HOOKIE_SHOW_ENTERING=1
+    export HOOKIE_SHOW_LEAVING=0
+    export HOOKIE_SHOW_CD_PROJECT_ROOT=0
 
-    # Show entry message (if enabled)
-    if [[ "$HOOKIE_SHOW_ENTERING" != "0" ]]; then
-        echo "🚀 Entered project: ${project_root:t} (${(j:, :)markers})"
-    fi
+    zinit load ~/projects/zsh-hookie-projects
 
-    # Auto-activate Python virtual environment
-    local python_markers=("pyproject.toml" "requirements.txt" "setup.py" ".venv" "venv" "env" "Pipfile")
-    local has_python_marker=0
+    on_project_hook() {
+        local project_root="$1"
+        shift
+        local markers=("$@")
 
-    for marker in "${python_markers[@]}"; do
-        if (( ${markers[(Ie)$marker]} )); then
-            has_python_marker=1
-            break
-        fi
-    done
+        # Set standard environment variables (silent)
+        export HOOKIE_CURRENT_PROJECT="${project_root:t}"
+        export HOOKIE_PROJECT_ROOT="$project_root"
+        typeset -g HOOKIE_PROJECT_MARKERS_STRING="${(j:, :)markers}"
+        export HOOKIE_PROJECT_MARKERS_STRING
 
-    if (( has_python_marker )); then
-        # Look for virtual environment in common locations
-        local venv_paths=("$project_root/.venv" "$project_root/venv" "$project_root/env")
+        # Check if it's a Python project
+        local python_markers=("pyproject.toml" "requirements.txt" "setup.py" ".venv" "venv" "env" "Pipfile")
+        local is_python=0
 
-        for venv_path in "${venv_paths[@]}"; do
-            if [[ -f "$venv_path/bin/activate" ]]; then
-                echo "🐍 Activating Python virtual environment: ${venv_path:t}"
-                source "$venv_path/bin/activate"
-                break
-            elif [[ -f "$venv_path/Scripts/activate" ]]; then
-                # Windows support
-                echo "🐍 Activating Python virtual environment: ${venv_path:t}"
-                source "$venv_path/Scripts/activate"
+        for marker in "${python_markers[@]}"; do
+            if (( ${markers[(Ie)$marker]} )); then
+                is_python=1
                 break
             fi
         done
 
-        # Load .env file if present
-        [[ -f "$project_root/.env" ]] && {
-            echo "📄 Loading environment variables from .env"
-            source "$project_root/.env"
-        }
-    fi
+        if (( is_python )) && [[ -f "$project_root/.venv/bin/activate" ]]; then
+            # Python project with .venv
+            source .venv/bin/activate
+            v $(pwd)
+        else
+            # Any other project
+            v $(pwd)
+        fi
+    }
 
-    # Load project-specific shell configuration
-    [[ -f "$project_root/.zshrc.local" ]] && source "$project_root/.zshrc.local"
+    off_project_hook() {
+        local project_root="$1"
+
+        # Silent cleanup
+        unset HOOKIE_CURRENT_PROJECT
+        unset HOOKIE_PROJECT_ROOT
+        unset HOOKIE_PROJECT_MARKERS_STRING
+
+        HOOKIE_CURRENT_PROJECT_DIR=""
+        HOOKIE_CURRENT_PROJECT_MARKERS=()
+    }
 }
-
-# Corresponding cleanup hook
-off_project_hook() {
-    local project_root="$1"
-    shift
-    local markers=("$@")
-
-    # Show leave message (if enabled)
-    if [[ "$HOOKIE_SHOW_LEAVING" != "0" ]]; then
-        echo "👋 Left project: ${project_root:t}"
-    fi
-
-    # Deactivate Python virtual environment
-    if [[ -n "$VIRTUAL_ENV" ]]; then
-        echo "🐍 Deactivating Python virtual environment"
-        deactivate 2>/dev/null
-    fi
-
-    # Clear environment variables
-    unset HOOKIE_CURRENT_PROJECT
-    unset HOOKIE_PROJECT_ROOT
-    unset HOOKIE_PROJECT_MARKERS_STRING
-
-    # Clear internal state
-    HOOKIE_CURRENT_PROJECT_DIR=""
-    HOOKIE_CURRENT_PROJECT_MARKERS=()
-}
+HOOKIE_PROJECT
 ```
 
 ### Simple Python Virtual Environment Example
@@ -395,6 +367,13 @@ off_project_hook() {
 For a more minimal approach, just focusing on Python projects:
 
 ```bash
+# Pre-hook: Always deactivate before entering any project
+on_project__pre_hook() {
+    local project_root="$1"
+    # Deactivate any existing virtual environment before entering new project
+    deactivate 2>/dev/null || true
+}
+
 on_project_hook() {
     local project_root="$1"
     shift
@@ -416,6 +395,11 @@ on_project_hook() {
         echo "🐍 Activating venv"
         source "$project_root/venv/bin/activate"
     fi
+}
+
+# Pre-hook: Always deactivate before leaving any project
+off_project__pre_hook() {
+    deactivate 2>/dev/null || true
 }
 
 off_project_hook() {

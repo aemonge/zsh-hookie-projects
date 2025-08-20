@@ -16,11 +16,6 @@ typeset -g HOOKIE_DIR_SEPARATOR_COLOR=${HOOKIE_DIR_SEPARATOR_COLOR:-240} # Dark 
 typeset -g HOOKIE_DIR_DEFAULT_COLOR=${HOOKIE_DIR_DEFAULT_COLOR:-4}       # Blue
 typeset -g HOOKIE_DIR_SHORTEN_THRESHOLD=${HOOKIE_DIR_SHORTEN_THRESHOLD:-3} # When to start shortening
 
-# Message control flags (set to 0 to disable, 1 to enable)
-typeset -g HOOKIE_SHOW_ENTERING=${HOOKIE_SHOW_ENTERING:-1}        # Show "🚀 Entered project"
-typeset -g HOOKIE_SHOW_LEAVING=${HOOKIE_SHOW_LEAVING:-1}          # Show "👋 Left project"
-typeset -g HOOKIE_SHOW_CD_PROJECT_ROOT=${HOOKIE_SHOW_CD_PROJECT_ROOT:-1}  # Show "📁 Going to project root"
-
 # Default project markers (customizable)
 typeset -ga HOOKIE_PROJECT_MARKERS=(
     # Version Control
